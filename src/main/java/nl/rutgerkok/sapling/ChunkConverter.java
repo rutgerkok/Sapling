@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.Objects;
 
 import nl.rutgerkok.hammer.anvil.AnvilChunk;
+import nl.rutgerkok.hammer.anvil.tag.AnvilFormat.ChunkTag;
 import nl.rutgerkok.hammer.pocket.PocketChunk;
 import nl.rutgerkok.hammer.tag.CompoundTag;
 import nl.rutgerkok.hammer.util.MaterialNotFoundException;
@@ -28,6 +29,11 @@ final class ChunkConverter {
         convertBlocks(source, destination);
         convertEntities(source, destination);
         convertTileEntities(source, destination);
+        markTerrainPopulated(destination);
+    }
+
+    private void markTerrainPopulated(AnvilChunk destination) {
+        destination.getTag().setBoolean(ChunkTag.TERRAIN_POPULATED, true);
     }
 
     public ChunkConverter(ErrorLog errorLog) {
