@@ -17,9 +17,15 @@ import nl.rutgerkok.hammer.util.Visitor;
 /**
  * Executes the whole convert process.
  */
-final class ConvertProcess {
+public final class ConvertProcess {
 
     private final ErrorLog errorLog;
+    private final ProgressUpdater progressUpdater;
+
+    public ConvertProcess(ErrorLog errorLog, ProgressUpdater progressUpdater) {
+        this.errorLog = Objects.requireNonNull(errorLog, "errorLog");
+        this.progressUpdater = Objects.requireNonNull(progressUpdater, "progressUpdater");
+    }
 
     /**
      * Executes the converting process.
@@ -29,24 +35,12 @@ final class ConvertProcess {
      * @param destination
      *            Destination world, must be empty.
      */
-    void convert(PocketWorld source, AnvilWorld destination) {
-        convertLevelDat(source, destination);
-        convertChunks(source, destination);
-    }
-
-    private void convertLevelDat(PocketWorld source, AnvilWorld destination) {
-        CompoundTag levelTag = destination.getLevelTag();
-        levelTag.clear();
-        levelTag.addAll(source.getLevelTag());
-
-        levelTag.setInt(LevelTag.VERSION, 19133); // Mark as Anvil map
-        // PE stores time as number of seconds since epoch, PC as milliseconds
-        levelTag.setLong(LevelTag.LAST_PLAYED, levelTag.getLong(LevelTag.LAST_PLAYED) * 1000);
-
+    public void convert(PocketWorld source, AnvilWorld destination) {
         try {
-            destination.saveLevelTag();
-        } catch (IOException e) {
-            errorLog.log("Conversion of level.dat failed", e);
+            convertLevelDat(source, destination);
+            convertChunks(source, destination);
+        } finally {
+            progressUpdater.complete();
         }
     }
 
@@ -67,6 +61,7 @@ final class ConvertProcess {
                     } catch (IOException e) {
                         errorLog.log("Failed to convert chunk (" + chunkX + "," + chunkZ + ")", e);
                     }
+                    progressUpdater.update(progress);
                     return Result.NO_CHANGES;
                 }
             });
@@ -75,7 +70,19 @@ final class ConvertProcess {
         }
     }
 
-    public ConvertProcess(ErrorLog errorLog) {
-        this.errorLog = Objects.requireNonNull(errorLog, "errorLog");
+    private void convertLevelDat(PocketWorld source, AnvilWorld destination) {
+        CompoundTag levelTag = destination.getLevelTag();
+        levelTag.clear();
+        levelTag.addAll(source.getLevelTag());
+
+        levelTag.setInt(LevelTag.VERSION, 19133); // Mark as Anvil map
+        // PE stores time as number of seconds since epoch, PC as milliseconds
+        levelTag.setLong(LevelTag.LAST_PLAYED, levelTag.getLong(LevelTag.LAST_PLAYED) * 1000);
+
+        try {
+            destination.saveLevelTag();
+        } catch (IOException e) {
+            errorLog.log("Conversion of level.dat failed", e);
+        }
     }
 }

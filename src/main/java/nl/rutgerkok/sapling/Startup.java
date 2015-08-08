@@ -5,6 +5,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 
 import nl.rutgerkok.hammer.anvil.AnvilWorld;
+import nl.rutgerkok.hammer.material.GlobalMaterialMap;
 import nl.rutgerkok.hammer.pocket.PocketWorld;
 
 import com.google.common.base.Joiner;
@@ -19,11 +20,11 @@ public final class Startup {
         String path = Joiner.on(' ').join(args);
 
         Path levelDat = Paths.get(path);
-        init(new SystemErrErrorLog(), levelDat);
+        init(new SystemErrErrorLog(), new SystemOutProgressUpdater(), levelDat);
         System.out.println("Done.");
     }
 
-    private static void init(ErrorLog errorLog, Path levelDat) {
+    public static void init(ErrorLog errorLog, ProgressUpdater progressUpdater, Path levelDat) {
         Path worldDir = levelDat.getParent();
         Path worldDirAnvil = worldDir.getParent().resolve(worldDir.getFileName() + "_anvil");
         Path levelDatAnvil = worldDirAnvil.resolve(AnvilWorld.LEVEL_DAT_NAME);
@@ -31,7 +32,7 @@ public final class Startup {
         try {
             PocketWorld pocketWorld = new PocketWorld(dictionary, levelDat);
             AnvilWorld anvilWorld = new AnvilWorld(dictionary, levelDatAnvil);
-            ConvertProcess convertProcess = new ConvertProcess(errorLog);
+            ConvertProcess convertProcess = new ConvertProcess(errorLog, progressUpdater);
             convertProcess.convert(pocketWorld, anvilWorld);
         } catch (IOException e) {
             errorLog.log("Error opening world", e);
