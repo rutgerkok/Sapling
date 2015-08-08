@@ -27,9 +27,10 @@ public final class Startup {
         Path worldDir = levelDat.getParent();
         Path worldDirAnvil = worldDir.getParent().resolve(worldDir.getFileName() + "_anvil");
         Path levelDatAnvil = worldDirAnvil.resolve(AnvilWorld.LEVEL_DAT_NAME);
+        GlobalMaterialMap dictionary = new GlobalMaterialMap();
         try {
-            PocketWorld pocketWorld = new PocketWorld(levelDat);
-            AnvilWorld anvilWorld = new AnvilWorld(levelDatAnvil);
+            PocketWorld pocketWorld = new PocketWorld(dictionary, levelDat);
+            AnvilWorld anvilWorld = new AnvilWorld(dictionary, levelDatAnvil);
             ConvertProcess convertProcess = new ConvertProcess(errorLog);
             convertProcess.convert(pocketWorld, anvilWorld);
         } catch (IOException e) {
